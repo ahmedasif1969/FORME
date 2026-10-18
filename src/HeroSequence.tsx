@@ -38,8 +38,9 @@ export default function HeroSequence() {
     const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
     if (reduced.matches || connection?.saveData) return () => story.revert();
     const controller = new AbortController();
-    let disposed = false, animation = 0, displayed = -1, target = 0, lastPaint = 0, lastTick = 0, playbackRate = 24;
+    let disposed = false, animation = 0, displayed = -1, target = 0, lastTick = 0, frameBudget = 0;
     let trigger: ScrollTrigger | undefined;
+    let holdingExit = false;
     let manifest: Manifest;
     const variant: 'phone' | 'desktop' = innerWidth < 768 ? 'phone' : 'desktop';
     const compressed = new Map<number, Blob>();
@@ -61,6 +62,7 @@ export default function HeroSequence() {
       controller.abort();
       cancelAnimationFrame(animation);
       trigger?.kill();
+      ScrollTrigger.refresh();
     };
     el.addEventListener('contextlost', fallback);
     const resize = () => {
@@ -93,7 +95,7 @@ export default function HeroSequence() {
     function priorities() {
       const direction = target >= displayed ? 1 : -1;
       const near = [0];
-      for (let n = 0; n <= 8; n++) near.push(Math.max(0, Math.min(manifest.count - 1, Math.max(0, displayed) + n * direction)));
+      for (let n = 0; n <= 16; n++) near.push(Math.max(0, Math.min(manifest.count - 1, Math.max(0, displayed) + n * direction)));
       return [...new Set(near)];
     }
     function pumpDecode() {
@@ -104,10 +106,10 @@ export default function HeroSequence() {
         decoding.add(index);
         createImageBitmap(compressed.get(index)!).then(frame => {
           if (disposed) frame.close(); else decoded.set(index, frame);
-        }).catch(() => { failed.add(index); hero.dataset.sequence = 'still-fallback'; }).finally(() => decoding.delete(index));
+        }).catch(() => { if (!disposed) fallback(); }).finally(() => { decoding.delete(index); pumpDecode(); });
       }
       for (const [index, frame] of decoded) {
-        if (Math.abs(index - Math.max(0, displayed)) > 12 && index !== 0) { frame.close(); decoded.delete(index); }
+        if (Math.abs(index - Math.max(0, displayed)) > 20 && index !== 0) { frame.close(); decoded.delete(index); }
       }
     }
     function pumpFetch() {
@@ -122,8 +124,8 @@ export default function HeroSequence() {
           return response.blob();
         }).then(blob => { if (!disposed) { compressed.set(index, blob); bytes += blob.size; } }).catch(() => {
           attempts.set(index, (attempts.get(index) || 0) + 1);
-          if ((attempts.get(index) || 0) >= 3) { failed.add(index); hero.dataset.sequence = 'still-fallback'; }
-        }).finally(() => { fetching.delete(index); });
+          if (!disposed && (attempts.get(index) || 0) >= 3) { failed.add(index); fallback(); }
+        }).finally(() => { fetching.delete(index); pumpFetch(); pumpDecode(); });
       }
     }
     function tick(now: number) {
@@ -134,10 +136,20 @@ export default function HeroSequence() {
         const elapsed = lastTick ? Math.min(50, now - lastTick) : 16.7;
         const scrollDistance = getScrollDistance();
         const scrollDrivenRate = (Math.abs(trigger?.getVelocity() ?? 0) / scrollDistance) * (manifest.count - 1);
-        const desiredRate = Math.min(60, Math.max(manifest.fps, scrollDrivenRate));
-        playbackRate += (desiredRate - playbackRate) * Math.min(1, elapsed / 140);
-        if (decoded.has(next) && (displayed < 0 || now - lastPaint >= 1000 / playbackRate)) {
-          if (next !== displayed) { displayed = next; paint(displayed); lastPaint = now; }
+        // Backlog keeps catch-up fast after the scroll gesture has ended.
+        const backlogRate = Math.abs(target - displayed) / .4;
+        const playbackRate = Math.min(60, Math.max(manifest.fps, scrollDrivenRate, backlogRate));
+        const interval = 1000 / playbackRate;
+        frameBudget = Math.min(frameBudget + elapsed, interval + elapsed);
+        if (decoded.has(next) && (displayed < 0 || frameBudget + .5 >= interval)) {
+          if (next !== displayed) {
+            displayed = next; paint(displayed);
+            frameBudget = Math.max(0, frameBudget - interval);
+          } else frameBudget = 0;
+        }
+        if (holdingExit && displayed === manifest.count - 1 && trigger) {
+          holdingExit = false;
+          window.dispatchEvent(new CustomEvent('hero-scroll-position', { detail: trigger.end + 1 }));
         }
       }
       lastTick = now;
@@ -149,7 +161,13 @@ export default function HeroSequence() {
       manifest = data;
       // Select one device set for this visit. Rotation repaints the same source, without downloading both sets.
       resize(); observer.observe(hero);
-      trigger = ScrollTrigger.create({ trigger: hero, start: 'top top', end: () => `+=${getScrollDistance()}`, pin: true, anticipatePin: 1, invalidateOnRefresh: true, onUpdate: self => { target = Math.round(self.progress * (manifest.count - 1)); } });
+      trigger = ScrollTrigger.create({ trigger: hero, start: 'top top', end: () => `+=${getScrollDistance()}`, pin: true, anticipatePin: 1, invalidateOnRefresh: true, onUpdate: self => {
+        target = Math.round(self.progress * (manifest.count - 1));
+        if (self.scroll() >= self.end && displayed < manifest.count - 1) {
+          holdingExit = true;
+          window.dispatchEvent(new CustomEvent('hero-scroll-position', { detail: self.end - 1 }));
+        } else if (self.scroll() < self.end - 2) holdingExit = false;
+      } });
       // Re-measure every downstream trigger after adding asynchronous hero pin spacing.
       ScrollTrigger.sort();
       ScrollTrigger.refresh();

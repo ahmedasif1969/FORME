@@ -35,6 +35,13 @@ export default function App() {
       lenis = new Lenis({ duration: 1.05, anchors: true });
       lenis.on('scroll', ScrollTrigger.update); gsap.ticker.add(ticker); gsap.ticker.lagSmoothing(0);
     }
+    const syncHeroScroll = (event: Event) => {
+      const position = (event as CustomEvent<number>).detail;
+      if (lenis) lenis.scrollTo(position, { immediate: true, force: true });
+      else window.scrollTo({ top: position, behavior: 'instant' });
+      ScrollTrigger.update();
+    };
+    window.addEventListener('hero-scroll-position', syncHeroScroll);
     media.add('(prefers-reduced-motion: no-preference)', () => {
       const ctx = gsap.context(() => {
         createScrollStory();
@@ -62,7 +69,7 @@ export default function App() {
     let mounted = true;
     document.fonts.ready.then(() => { if (mounted) ScrollTrigger.refresh(); });
     const progress = ScrollTrigger.create({ start: 0, end: 'max', onUpdate: self => { root.current?.style.setProperty('--page-progress', String(self.progress)); } });
-    return () => { mounted = false; media.revert(); progress.kill(); gsap.ticker.remove(ticker); lenis?.destroy(); };
+    return () => { window.removeEventListener('hero-scroll-position', syncHeroScroll); mounted = false; media.revert(); progress.kill(); gsap.ticker.remove(ticker); lenis?.destroy(); };
   }, []);
 
   const openProject = (index: number) => { setDetail(index); dialog.current?.showModal(); };
