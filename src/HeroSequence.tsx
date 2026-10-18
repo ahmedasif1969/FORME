@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { nextDownloads } from './downloadQueue';
 gsap.registerPlugin(ScrollTrigger);
 
 type Manifest = { count: number; fps: number; desktop: { width: number; height: number }; phone: { width: number; height: number } };
@@ -114,10 +115,8 @@ export default function HeroSequence() {
     }
     function pumpFetch() {
       if (disposed || document.hidden || bytes > compressedBudget) return;
-      const order = [...priorities(), ...Array.from({ length: manifest.count }, (_, i) => i)];
+      const order = nextDownloads(manifest.count, priorities(), fetching, compressed, failed);
       for (const index of order) {
-        if (fetching.size >= 4) break;
-        if (compressed.has(index) || fetching.has(index) || failed.has(index)) continue;
         fetching.add(index);
         fetch(`/media/${variant}/${String(index).padStart(4, '0')}.webp`, { signal: controller.signal }).then(response => {
           if (!response.ok) throw new Error('Frame unavailable');

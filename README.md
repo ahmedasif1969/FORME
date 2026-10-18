@@ -18,7 +18,7 @@ The supplied 10-second, 24 fps video is the source for all 240 consecutive WebP 
 - Desktop: 1440 x 810, WebP quality 78, scaled from the 1920 x 1080 source to reduce transfer and decode time.
 - Phone: 608 x 1080, WebP quality 80, 9.3 MB total. Crop x=400 preserves the residence without resizing source pixels.
 - Canvas pixel density capped at 1.5. Device sets are selected once per visit; resizing repaints the selected set without fetching the other set.
-- Four concurrent fetches; three concurrent desktop decodes or two phone decodes; 16 frames of directional lookahead.
+- Up to four concurrent fetches, with at most two distant background requests so nearby playback frames have reserved capacity; three concurrent desktop decodes or two phone decodes; 16 frames of directional lookahead.
 - Compressed cache budget: 150 MiB desktop, 70 MiB phone. Both full sequences fit. Decoded images outside the nearby window are released.
 - Frame zero loads and paints immediately. Poster remains underneath. Consecutive frames play in either direction. Display speed adapts from 24 up to 60 frames per second as scroll speed increases, so fast scrolling catches up sooner without skipping frames. Catch-up speed also responds to the remaining frame backlog and keeps fractional frame timing across screen refreshes. The hero holds at its exit until the final frame is painted; scrolling back remains available. The full sequence spans 1.5 viewports (at least 900 px), down from 2.5 viewports or a 240-frame distance floor.
 - All fetch/decode scheduling pauses while the document is hidden. Briefly leaving the hero does not cancel preloading.
