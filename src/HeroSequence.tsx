@@ -49,6 +49,8 @@ export default function HeroSequence() {
     let bytes = 0;
     const lowMemory = variant === 'phone' || ((navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8) <= 4;
     const compressedBudget = (lowMemory ? 70 : 150) * 1024 * 1024;
+    // One and a half viewports keeps the sequence responsive while preserving every frame.
+    const getScrollDistance = () => Math.max(innerHeight * 1.5, 900);
     const decodeLimit = lowMemory ? 2 : 3;
     const context = el.getContext('2d', { alpha: false });
     if (!context) return () => story.revert();
@@ -130,7 +132,7 @@ export default function HeroSequence() {
         pumpFetch(); pumpDecode();
         const next = displayed < 0 ? 0 : displayed === target ? displayed : displayed + Math.sign(target - displayed);
         const elapsed = lastTick ? Math.min(50, now - lastTick) : 16.7;
-        const scrollDistance = Math.max(innerHeight * 2.5, manifest.count * 11);
+        const scrollDistance = getScrollDistance();
         const scrollDrivenRate = (Math.abs(trigger?.getVelocity() ?? 0) / scrollDistance) * (manifest.count - 1);
         const desiredRate = Math.min(60, Math.max(manifest.fps, scrollDrivenRate));
         playbackRate += (desiredRate - playbackRate) * Math.min(1, elapsed / 140);
@@ -147,7 +149,7 @@ export default function HeroSequence() {
       manifest = data;
       // Select one device set for this visit. Rotation repaints the same source, without downloading both sets.
       resize(); observer.observe(hero);
-      trigger = ScrollTrigger.create({ trigger: hero, start: 'top top', end: () => `+=${Math.max(innerHeight * 2.5, manifest.count * 11)}`, pin: true, anticipatePin: 1, invalidateOnRefresh: true, onUpdate: self => { target = Math.round(self.progress * (manifest.count - 1)); } });
+      trigger = ScrollTrigger.create({ trigger: hero, start: 'top top', end: () => `+=${getScrollDistance()}`, pin: true, anticipatePin: 1, invalidateOnRefresh: true, onUpdate: self => { target = Math.round(self.progress * (manifest.count - 1)); } });
       // Re-measure every downstream trigger after adding asynchronous hero pin spacing.
       ScrollTrigger.sort();
       ScrollTrigger.refresh();
