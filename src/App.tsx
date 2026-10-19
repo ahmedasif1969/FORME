@@ -88,7 +88,7 @@ export default function App() {
       </header>
       <HeroStory />
       <div className="hero-bottom">
-        <div className="hero-bottom-copy"><span className="micro">A different perspective on home.</span><p>Spaces shaped by their surroundings.<br/>Designed for a life well lived.</p><a href="#about">Discover FORME <ArrowDown size={15}/></a></div>
+        <div className="hero-bottom-copy"><a href="#about">Discover FORME <ArrowDown size={15}/></a></div>
         <div className="sequence-status"><div><span className="micro">A closer look</span><span className="frame-number">00%</span></div><span className="sequence-rule"/><span className="micro">LANDSCAPE / ARCHITECTURE / LIFE</span></div>
       </div>
     </section>

@@ -33,7 +33,6 @@ export default function HeroSequence() {
         story.set(chapter, { autoAlpha: 0 }, exit + .11);
       }
     });
-    story.to('.hero-story', { opacity: .15, y: -35, duration: .07, ease: 'none' }, .93);
     story.progress(0);
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
     const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;

@@ -21,6 +21,6 @@
 .hero-bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:40px;padding:0 4% 28px 3%}
 .hero-bottom-copy{padding:0;max-width:300px}
 .sequence-status{padding:0;width:220px;flex:none}
-.story-index{bottom:155px}
+.story-index{bottom:92px}
 @media(max-width:767px){.hero-bottom{padding:0 6% 26px}.sequence-status{position:static;width:150px;padding:0}.story-index{bottom:95px}}
 @media(max-height:550px) and (max-width:1000px){.hero-bottom{display:flex;justify-content:flex-end;padding:0 5% 22px}.sequence-status{position:static;width:120px}.story-index{bottom:100px}}
