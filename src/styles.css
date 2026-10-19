@@ -16,3 +16,11 @@
 @media(max-width:767px){.story-index{left:6%;right:6%;bottom:225px;gap:14px}.story-step{font-size:7px;min-width:0;flex:1;gap:5px}.story-step-label{white-space:normal;max-width:76px;line-height:1.4}.hero-caption{top:56%}.philosophy-statement{font-size:28px;margin-top:30px;max-width:360px}.philosophy-story{padding-bottom:0}.philosophy-story+.philosophy-layout{margin-top:40px}}
 @media(max-height:550px) and (max-width:1000px){.story-index{left:auto;right:5%;bottom:120px;max-width:320px;gap:14px}.story-step-label{font-size:7px}.hero-caption{top:40%}.hero-title{font-size:clamp(50px,7.4vw,72px)}}
 @media(prefers-reduced-motion:reduce){.hero-chapter:not(:first-child){display:none}.hero-line span{will-change:auto}.story-index{display:none}.hero-story{opacity:1!important;transform:none!important}.statement-word{color:#efeee8!important}}
+
+/* Open hero composition after removing the residence card and guide lines. */
+.hero-bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:40px;padding:0 4% 28px 3%}
+.hero-bottom-copy{padding:0;max-width:300px}
+.sequence-status{padding:0;width:220px;flex:none}
+.story-index{bottom:155px}
+@media(max-width:767px){.hero-bottom{padding:0 6% 26px}.sequence-status{position:static;width:150px;padding:0}.story-index{bottom:95px}}
+@media(max-height:550px) and (max-width:1000px){.hero-bottom{display:flex;justify-content:flex-end;padding:0 5% 22px}.sequence-status{position:static;width:120px}.story-index{bottom:100px}}

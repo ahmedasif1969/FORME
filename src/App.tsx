@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import { ArrowUpRight, ArrowDown, ArrowLeft, ArrowRight, Plus, X, Menu, Box, MoveUpRight } from 'lucide-react';
+import { ArrowUpRight, ArrowDown, Plus, X, Menu, Box, MoveUpRight } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
@@ -15,14 +15,9 @@ const projects = [
   { name: 'The Solstice Collection', setting: 'Courtyard living', image: '/media/interior.webp', description: 'Homes arranged around light. Private courtyards, tactile surfaces and planted thresholds bring a close connection to nature into everyday rituals.', materials: 'Limestone / timber / planted courtyards', number: '03' },
 ];
 
-function Plan() {
-  return <svg className="plan" viewBox="0 0 180 150" fill="none" aria-label="Conceptual architectural axonometric drawing" role="img"><g stroke="currentColor" strokeWidth=".7"><path d="M15 91 89 128 163 84 89 48Z M15 91V58L89 17 163 51V84 M89 128V91 M15 58 89 91 163 51 M89 17V48 M29 65V88L61 104V79 M40 71V95 M61 79 89 63 118 77 M118 77V108 M135 68V97 M150 59V88 M29 48V31L104 0 176 34V71 M29 31 104 64 176 34 M104 0V64 M104 64V102 M15 108 89 145 174 96 M15 103V114 M89 139V150 M174 90V102"/><path d="M45 81V49L72 35V93 M82 40V68 M126 33V65 M145 42V57"/></g></svg>;
-}
-
 export default function App() {
   const root = useRef<HTMLDivElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
-  const [active, setActive] = useState(0);
   const [detail, setDetail] = useState(0);
   const [menu, setMenu] = useState(false);
   const [formStatus, setFormStatus] = useState('');
@@ -85,7 +80,6 @@ export default function App() {
       <picture className="hero-poster"><source media="(max-width: 767px)" srcSet="/media/poster-phone.webp"/><img src="/media/poster.webp" alt="Contemporary hillside residence overlooking a pool at dusk" fetchPriority="high"/></picture>
       <HeroSequence />
       <div className="hero-shade" />
-      <div className="hero-grid" aria-hidden="true"><i/><i/><i/></div>
       <header className="nav">
         <a className="brand" href="#home" aria-label="FORME Developments home"><span className="brand-mark"><Box strokeWidth={1.2}/></span><span>FORME<small>DEVELOPMENTS</small></span></a>
         <nav className={menu ? 'nav-links open' : 'nav-links'} aria-label="Main navigation"><a href="#projects" onClick={() => setMenu(false)}>Projects</a><a href="#about" onClick={() => setMenu(false)}>About Us</a><a href="#contact" onClick={() => setMenu(false)}>Contact</a></nav>
@@ -94,7 +88,6 @@ export default function App() {
       </header>
       <HeroStory />
       <div className="hero-bottom">
-        <div className="residence-panel"><Plan/><div className="residence-data"><span className="micro">Featured residence</span><div className="residence-count">{projects[active].number}<span>/ 03</span></div><button className="project-name" onClick={() => openProject(active)}>{projects[active].name}<ArrowUpRight size={16}/></button></div><div className="panel-controls"><button aria-label="Previous featured residence" onClick={() => setActive((active + 2) % 3)}><ArrowLeft size={16}/></button><button aria-label="Next featured residence" onClick={() => setActive((active + 1) % 3)}><ArrowRight size={16}/></button></div></div>
         <div className="hero-bottom-copy"><span className="micro">A different perspective on home.</span><p>Spaces shaped by their surroundings.<br/>Designed for a life well lived.</p><a href="#about">Discover FORME <ArrowDown size={15}/></a></div>
         <div className="sequence-status"><div><span className="micro">A closer look</span><span className="frame-number">00%</span></div><span className="sequence-rule"/><span className="micro">LANDSCAPE / ARCHITECTURE / LIFE</span></div>
       </div>
