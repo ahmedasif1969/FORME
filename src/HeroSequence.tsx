@@ -129,7 +129,7 @@ export default function HeroSequence() {
       if (number) number.textContent = `${Math.round(progress * 100).toString().padStart(2, '0')}%`;
     }
     function priorities() {
-      if (!started) return Array.from({ length: Math.min(48, manifest.count) }, (_, i) => i);
+      if (!started) return Array.from({ length: Math.min(72, manifest.count) }, (_, i) => i);
       const direction = target >= displayed ? 1 : -1;
       const near = [0];
       for (let n = 0; n <= 16; n++) near.push(Math.max(0, Math.min(manifest.count - 1, Math.max(0, displayed) + n * direction)));
@@ -168,7 +168,7 @@ export default function HeroSequence() {
       if (!document.hidden) {
         pumpFetch(); pumpDecode();
         if (!started) {
-          const count = Math.min(48, manifest.count);
+          const count = Math.min(72, manifest.count);
           const loaded = Array.from({ length: count }, (_, i) => compressed.has(i)).filter(Boolean).length;
           const prepared = Array.from({ length: Math.min(17, count) }, (_, i) => decoded.has(i)).every(Boolean);
           const percent = Math.min(prepared ? 100 : 99, Math.floor(loaded / count * 100));
