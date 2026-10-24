@@ -24,3 +24,23 @@
 .story-index{bottom:92px}
 @media(max-width:767px){.hero-bottom{padding:0 6% 26px}.sequence-status{position:static;width:150px;padding:0}.story-index{bottom:95px}}
 @media(max-height:550px) and (max-width:1000px){.hero-bottom{display:flex;justify-content:flex-end;padding:0 5% 22px}.sequence-status{position:static;width:120px}.story-index{bottom:100px}}
+
+/* The opening buffer uses the existing FORME palette and typography. */
+.site-loader{position:fixed;inset:0;margin:0;border:0;padding:32px;width:100%;max-width:none;height:100dvh;max-height:none;background:#171a17;color:#efeee8;opacity:1;transition:opacity .3s ease}
+.site-loader[open]{display:grid;place-items:center}
+.site-loader::backdrop{background:#171a17}
+.site-loader.is-leaving{opacity:0}
+.site-loader.is-leaving::backdrop{background:transparent}
+.loader-content{width:min(100%,340px)}
+.loader-brand{font-size:clamp(48px,10vw,72px);letter-spacing:.12em;line-height:1;text-align:center}
+.loader-brand span{display:block;font-size:9px;letter-spacing:.38em;margin-top:16px}
+#loader-description{font-size:13px;color:#9c9f95;text-align:center;margin:42px 0 64px}
+.loader-meter{display:flex;justify-content:space-between;gap:20px;font-size:10px;letter-spacing:.04em}
+.loader-percent{font-variant-numeric:tabular-nums}
+.site-loader progress{display:block;appearance:none;width:100%;height:1px;border:0;background:#ffffff26;margin-top:14px;color:#efeee8}
+.site-loader progress::-webkit-progress-bar{background:#ffffff26}
+.site-loader progress::-webkit-progress-value{background:#efeee8}
+.site-loader progress::-moz-progress-bar{background:#efeee8}
+.site-loader button{display:block;margin:28px auto 0;padding:12px 18px;font-size:11px;color:#b7b9a7}
+.site-loader button span{margin-left:12px}
+@media(prefers-reduced-motion:reduce){.site-loader{transition:none}}

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { nextDownloads } from './downloadQueue';
@@ -9,6 +10,8 @@ type Manifest = { count: number; fps: number; desktop: { width: number; height: 
 /** Compressed frames persist across direction changes; only the nearby decoded window lives on the GPU. */
 export default function HeroSequence() {
   const canvas = useRef<HTMLCanvasElement>(null);
+  const loader = useRef<HTMLDialogElement>(null);
+  const skipIntro = useRef<() => void>(() => {});
   useEffect(() => {
     const el = canvas.current!;
     const hero = el.closest<HTMLElement>('.hero')!;
@@ -55,7 +58,23 @@ export default function HeroSequence() {
     const decodeLimit = lowMemory ? 2 : 3;
     const context = el.getContext('2d', { alpha: false });
     if (!context) return () => story.revert();
+    const overlay = loader.current!;
+    const previousOverflow = document.documentElement.style.overflow;
+    let started = false, revealTimer = 0;
+    const unlock = () => {
+      overlay.close();
+      document.documentElement.style.overflow = previousOverflow;
+      delete document.documentElement.dataset.heroLoading;
+      window.dispatchEvent(new Event('hero-loading-change'));
+    };
+    overlay.classList.remove('is-leaving');
+    overlay.showModal();
+    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.dataset.heroLoading = 'true';
+    window.dispatchEvent(new Event('hero-loading-change'));
     const fallback = () => {
+      clearTimeout(revealTimer);
+      unlock();
       el.classList.remove('ready');
       hero.dataset.sequence = 'still-fallback';
       disposed = true;
@@ -64,6 +83,7 @@ export default function HeroSequence() {
       trigger?.kill();
       ScrollTrigger.refresh();
     };
+    skipIntro.current = fallback;
     el.addEventListener('contextlost', fallback);
     const resize = () => {
       const density = Math.min(devicePixelRatio || 1, 1.5);
@@ -93,6 +113,7 @@ export default function HeroSequence() {
       if (number) number.textContent = `${Math.round(progress * 100).toString().padStart(2, '0')}%`;
     }
     function priorities() {
+      if (!started) return Array.from({ length: Math.min(48, manifest.count) }, (_, i) => i);
       const direction = target >= displayed ? 1 : -1;
       const near = [0];
       for (let n = 0; n <= 16; n++) near.push(Math.max(0, Math.min(manifest.count - 1, Math.max(0, displayed) + n * direction)));
@@ -100,7 +121,7 @@ export default function HeroSequence() {
     }
     function pumpDecode() {
       if (disposed || document.hidden) return;
-      for (const index of priorities()) {
+      for (const index of priorities().slice(0, 17)) {
         if (decoding.size >= decodeLimit) break;
         if (decoded.has(index) || decoding.has(index) || !compressed.has(index)) continue;
         decoding.add(index);
@@ -130,6 +151,27 @@ export default function HeroSequence() {
       if (disposed) return;
       if (!document.hidden) {
         pumpFetch(); pumpDecode();
+        if (!started) {
+          const count = Math.min(48, manifest.count);
+          const loaded = Array.from({ length: count }, (_, i) => compressed.has(i)).filter(Boolean).length;
+          const prepared = Array.from({ length: Math.min(17, count) }, (_, i) => decoded.has(i)).every(Boolean);
+          const percent = Math.min(prepared ? 100 : 99, Math.floor(loaded / count * 100));
+          overlay.querySelector('progress')!.value = percent;
+          overlay.querySelector('.loader-percent')!.textContent = `${percent}%`;
+          if (loaded === count && prepared && !revealTimer) {
+            displayed = 0;
+            paint(0);
+            overlay.classList.add('is-leaving');
+            revealTimer = window.setTimeout(() => {
+              if (disposed) return;
+              started = true;
+              unlock();
+              startScroll();
+            }, 300);
+          }
+          animation = requestAnimationFrame(tick);
+          return;
+        }
         const next = displayed < 0 ? 0 : displayed === target ? displayed : displayed + Math.sign(target - displayed);
         const elapsed = lastTick ? Math.min(50, now - lastTick) : 16.7;
         const scrollDistance = getScrollDistance();
@@ -159,6 +201,10 @@ export default function HeroSequence() {
       manifest = data;
       // Select one device set for this visit. Rotation repaints the same source, without downloading both sets.
       resize(); observer.observe(hero);
+      animation = requestAnimationFrame(tick);
+      hero.dataset.sequence = variant;
+    }).catch(() => { if (!disposed) fallback(); });
+    function startScroll() {
       trigger = ScrollTrigger.create({ trigger: hero, start: 'top top', end: () => `+=${getScrollDistance()}`, pin: true, anticipatePin: 1, invalidateOnRefresh: true, onUpdate: self => {
         target = Math.round(self.progress * (manifest.count - 1));
         if (self.scroll() >= self.end && displayed < manifest.count - 1) {
@@ -169,14 +215,23 @@ export default function HeroSequence() {
       // Re-measure every downstream trigger after adding asynchronous hero pin spacing.
       ScrollTrigger.sort();
       ScrollTrigger.refresh();
-      animation = requestAnimationFrame(tick);
-      hero.dataset.sequence = variant;
-    }).catch(() => { if (!disposed) hero.dataset.sequence = 'still-fallback'; });
+    }
     return () => {
+      clearTimeout(revealTimer);
+      unlock();
+      skipIntro.current = () => {};
       disposed = true; controller.abort(); cancelAnimationFrame(animation); trigger?.kill(); observer.disconnect(); el.removeEventListener('contextlost', fallback);
       decoded.forEach(frame => frame.close()); decoded.clear(); compressed.clear();
       story.revert();
     };
   }, []);
-  return <canvas ref={canvas} className="hero-canvas" aria-hidden="true" />;
+  return <><canvas ref={canvas} className="hero-canvas" aria-hidden="true" />{createPortal(
+    <dialog ref={loader} className="site-loader" aria-labelledby="loader-title" aria-describedby="loader-description" data-lenis-prevent onCancel={event => { event.preventDefault(); skipIntro.current(); }}>
+      <div className="loader-content"><p id="loader-title" className="loader-brand">FORME<span>DEVELOPMENTS</span></p>
+        <p id="loader-description">A considered beginning.</p>
+        <div className="loader-meter"><span>Preparing your experience</span><span className="loader-percent" aria-hidden="true">0%</span></div>
+        <progress max="100" value="0" aria-label="Preparing the hero animation" />
+        <button type="button" onClick={() => skipIntro.current()}>Skip intro <span aria-hidden="true">↗</span></button>
+      </div>
+    </dialog>, document.body)}</>;
 }

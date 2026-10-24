@@ -37,6 +37,12 @@ export default function App() {
       ScrollTrigger.update();
     };
     window.addEventListener('hero-scroll-position', syncHeroScroll);
+    const syncLoading = () => {
+      if (document.documentElement.dataset.heroLoading) lenis?.stop();
+      else lenis?.start();
+    };
+    syncLoading();
+    window.addEventListener('hero-loading-change', syncLoading);
     media.add('(prefers-reduced-motion: no-preference)', () => {
       const ctx = gsap.context(() => {
         createScrollStory();
@@ -64,7 +70,7 @@ export default function App() {
     let mounted = true;
     document.fonts.ready.then(() => { if (mounted) ScrollTrigger.refresh(); });
     const progress = ScrollTrigger.create({ start: 0, end: 'max', onUpdate: self => { root.current?.style.setProperty('--page-progress', String(self.progress)); } });
-    return () => { window.removeEventListener('hero-scroll-position', syncHeroScroll); mounted = false; media.revert(); progress.kill(); gsap.ticker.remove(ticker); lenis?.destroy(); };
+    return () => { window.removeEventListener('hero-loading-change', syncLoading); window.removeEventListener('hero-scroll-position', syncHeroScroll); mounted = false; media.revert(); progress.kill(); gsap.ticker.remove(ticker); lenis?.destroy(); };
   }, []);
 
   const openProject = (index: number) => { setDetail(index); dialog.current?.showModal(); };
