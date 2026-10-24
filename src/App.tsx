@@ -108,7 +108,7 @@ export default function App() {
       <picture className="hero-poster"><source media="(max-width: 767px)" srcSet="/media/poster-phone.webp"/><img src="/media/poster.webp" alt="Contemporary hillside residence overlooking a pool at dusk" fetchPriority="high"/></picture>
       <HeroSequence />
       <div className="hero-shade" />
-      <header className="nav">
+      <header className={menu ? 'nav menu-open' : 'nav'}>
         <a className="brand" href="#home" aria-label="FORME Developments home"><span className="brand-mark"><Box strokeWidth={1.2}/></span><span>FORME<small>DEVELOPMENTS</small></span></a>
         <nav id="main-navigation" className={menu ? 'nav-links open' : 'nav-links'} aria-label="Main navigation"><a href="#projects" onClick={() => setMenu(false)}>Projects</a><a href="#about" onClick={() => setMenu(false)}>About Us</a><a href="#contact" onClick={() => setMenu(false)}>Contact</a></nav>
         <a className="pill" href="#contact">Book a Viewing <ArrowUpRight size={15}/></a>

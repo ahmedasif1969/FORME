@@ -55,3 +55,14 @@
   .nav-links.open a:hover,.nav-links.open a:focus-visible{color:#b7b9a7}
 }
 @keyframes nav-dropdown-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+/* The mobile navigation opens as one continuous header. */
+@media(max-width:767px){
+  .nav.menu-open{height:auto;display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:65px auto;column-gap:12px;row-gap:0;align-items:center;background:#171a17;box-shadow:0 14px 30px #00000026}
+  .nav.menu-open .brand{grid-column:1;grid-row:1;min-width:0}
+  .nav.menu-open>.pill{grid-column:2;grid-row:1;margin:0}
+  .nav.menu-open .menu-button{grid-column:3;grid-row:1;justify-self:end}
+  .nav.menu-open .nav-links.open{position:static;grid-column:1/-1;grid-row:2;display:flex;flex-direction:column;align-items:stretch;gap:0;width:100%;margin:0;padding:4px 0 15px;border:0;border-top:1px solid #ffffff26;box-shadow:none;animation:nav-dropdown-in .18s ease-out}
+  .nav.menu-open .nav-links.open a{min-height:50px;padding:13px 0}
+}
+@media(max-width:767px) and (max-height:550px){.nav.menu-open{grid-template-rows:65px auto}}
