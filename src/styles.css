@@ -45,3 +45,13 @@
 .site-loader button{display:block;margin:28px auto 0;padding:12px 18px;font-size:11px;color:#b7b9a7}
 .site-loader button span{margin-left:12px}
 @media(prefers-reduced-motion:reduce){.site-loader{transition:none}}
+
+/* Anchor the mobile dropdown to the header, including short landscape screens. */
+@media(max-width:767px){
+  .nav-links.open{top:100%;left:6%;right:6%;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0;padding:10px 20px;background:#171a17;border:1px solid #ffffff26;box-shadow:0 14px 30px #00000026;animation:nav-dropdown-in .18s ease-out}
+  .nav-links.open a{display:flex;align-items:center;min-height:52px;padding:14px 0;font-size:14px;line-height:1.4;letter-spacing:.02em}
+  .nav-links.open a+a{border-top:1px solid #ffffff18}
+  .nav-links.open a:after{display:none}
+  .nav-links.open a:hover,.nav-links.open a:focus-visible{color:#b7b9a7}
+}
+@keyframes nav-dropdown-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
