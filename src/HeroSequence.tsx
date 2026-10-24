@@ -44,6 +44,20 @@ export default function HeroSequence() {
     let disposed = false, animation = 0, displayed = -1, target = 0, lastTick = 0, frameBudget = 0;
     let trigger: ScrollTrigger | undefined;
     let holdingExit = false;
+    let navigating = Boolean(location.hash && location.hash !== '#home');
+    const navigate = (event: MouseEvent) => {
+      const link = (event.target as Element).closest<HTMLAnchorElement>('a[href^="#"]');
+      if (!link || !document.getElementById(link.hash.slice(1))) return;
+      navigating = link.hash !== '#home';
+      holdingExit = false;
+    };
+    const guardScroll = () => {
+      if (!disposed && trigger && !navigating && displayed < manifest.count - 1 && window.scrollY >= trigger.end) {
+        target = manifest.count - 1;
+        holdingExit = true;
+        window.dispatchEvent(new CustomEvent('hero-scroll-position', { detail: trigger.end - 1 }));
+      }
+    };
     let manifest: Manifest;
     const variant: 'phone' | 'desktop' = innerWidth < 768 ? 'phone' : 'desktop';
     const compressed = new Map<number, Blob>();
@@ -58,6 +72,8 @@ export default function HeroSequence() {
     const decodeLimit = lowMemory ? 2 : 3;
     const context = el.getContext('2d', { alpha: false });
     if (!context) return () => story.revert();
+    document.addEventListener('click', navigate, true);
+    window.addEventListener('hero-before-scroll', guardScroll);
     const overlay = loader.current!;
     const previousOverflow = document.documentElement.style.overflow;
     let started = false, revealTimer = 0;
@@ -207,7 +223,8 @@ export default function HeroSequence() {
     function startScroll() {
       trigger = ScrollTrigger.create({ trigger: hero, start: 'top top', end: () => `+=${getScrollDistance()}`, pin: true, anticipatePin: 1, invalidateOnRefresh: true, onUpdate: self => {
         target = Math.round(self.progress * (manifest.count - 1));
-        if (self.scroll() >= self.end && displayed < manifest.count - 1) {
+        if (self.scroll() <= self.start + 2 && self.direction < 0) navigating = false;
+        if (!navigating && self.scroll() >= self.end && displayed < manifest.count - 1) {
           holdingExit = true;
           window.dispatchEvent(new CustomEvent('hero-scroll-position', { detail: self.end - 1 }));
         } else if (self.scroll() < self.end - 2) holdingExit = false;
@@ -217,6 +234,8 @@ export default function HeroSequence() {
       ScrollTrigger.refresh();
     }
     return () => {
+      document.removeEventListener('click', navigate, true);
+      window.removeEventListener('hero-before-scroll', guardScroll);
       clearTimeout(revealTimer);
       unlock();
       skipIntro.current = () => {};

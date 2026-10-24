@@ -22,13 +22,35 @@ export default function App() {
   const [menu, setMenu] = useState(false);
   const [formStatus, setFormStatus] = useState('');
   useEffect(() => {
+    if (!menu) return;
+    const dismiss = (event: PointerEvent) => {
+      if (!(event.target as Element).closest('.nav')) setMenu(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMenu(false);
+        root.current?.querySelector<HTMLButtonElement>('.menu-button')?.focus();
+      }
+    };
+    document.addEventListener('pointerdown', dismiss);
+    document.addEventListener('keydown', escape);
+    return () => {
+      document.removeEventListener('pointerdown', dismiss);
+      document.removeEventListener('keydown', escape);
+    };
+  }, [menu]);
+  useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
     const media = gsap.matchMedia();
     let lenis: Lenis | undefined;
     const ticker = (time: number) => lenis?.raf(time * 1000);
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      lenis = new Lenis({ duration: 1.05, anchors: true });
-      lenis.on('scroll', ScrollTrigger.update); gsap.ticker.add(ticker); gsap.ticker.lagSmoothing(0);
+      lenis = new Lenis({ duration: 1.05, anchors: true, syncTouch: true });
+      lenis.on('scroll', () => {
+        // Clamp unfinished playback before ScrollTrigger can release its pin.
+        window.dispatchEvent(new Event('hero-before-scroll'));
+        ScrollTrigger.update();
+      }); gsap.ticker.add(ticker); gsap.ticker.lagSmoothing(0);
     }
     const syncHeroScroll = (event: Event) => {
       const position = (event as CustomEvent<number>).detail;
@@ -88,9 +110,9 @@ export default function App() {
       <div className="hero-shade" />
       <header className="nav">
         <a className="brand" href="#home" aria-label="FORME Developments home"><span className="brand-mark"><Box strokeWidth={1.2}/></span><span>FORME<small>DEVELOPMENTS</small></span></a>
-        <nav className={menu ? 'nav-links open' : 'nav-links'} aria-label="Main navigation"><a href="#projects" onClick={() => setMenu(false)}>Projects</a><a href="#about" onClick={() => setMenu(false)}>About Us</a><a href="#contact" onClick={() => setMenu(false)}>Contact</a></nav>
+        <nav id="main-navigation" className={menu ? 'nav-links open' : 'nav-links'} aria-label="Main navigation"><a href="#projects" onClick={() => setMenu(false)}>Projects</a><a href="#about" onClick={() => setMenu(false)}>About Us</a><a href="#contact" onClick={() => setMenu(false)}>Contact</a></nav>
         <a className="pill" href="#contact">Book a Viewing <ArrowUpRight size={15}/></a>
-        <button className="menu-button" aria-label={menu ? 'Close navigation' : 'Open navigation'} aria-expanded={menu} onClick={() => setMenu(!menu)}>{menu ? <X/> : <Menu/>}</button>
+        <button className="menu-button" aria-controls="main-navigation" aria-label={menu ? 'Close navigation' : 'Open navigation'} aria-expanded={menu} onClick={() => setMenu(value => !value)}>{menu ? <X/> : <Menu/>}</button>
       </header>
       <HeroStory />
       <div className="hero-bottom">
